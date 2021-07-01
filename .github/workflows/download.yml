@@ -20,7 +20,7 @@ jobs:
         run: |
             python3 setup.py
 
-      - name: Download video
+      - name: Download file
         run: |
             aria2c --conf-path=./aria2.conf $(cat url.txt)
       
@@ -47,7 +47,7 @@ jobs:
         env:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         run: |
-          curl \
+          curl --silent \
           -X POST \
           -H "Authorization: token $ACCESS_TOKEN" \
           -H "Content-Type: application/json" \

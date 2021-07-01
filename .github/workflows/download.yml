@@ -11,16 +11,12 @@ jobs:
     if: github.event.repository.owner.id == github.event.sender.id
 
     steps:
-      - name: Install dependent
-        run: |
-          sudo apt install zip -y
-      
       - name: Checkout source
         uses: actions/checkout@v2
         with:
           ref: main
       
-      - name: Setup task
+      - name: Set up task
         run: |
             python3 setup.py
 
@@ -28,12 +24,12 @@ jobs:
         run: |
             aria2c --conf-path=./aria2.conf $(cat url.txt)
       
-      - name: Process video
+      - name: Zip and split file
         run: |
           zip -m -s 10m -r file.zip $(cat file_path.txt)
           ls file.z* > file_list.txt
 
-      - name: Setup Git
+      - name: Set up Git environment
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           USER_EMAIL: ${{ secrets.USER_EMAIL }}
@@ -56,9 +52,10 @@ jobs:
           -H "Authorization: token $ACCESS_TOKEN" \
           -H "Content-Type: application/json" \
           https://api.github.com/user/repos \
-          -d "{\"name\": \"$(cat repo.txt)\"}"
+          -d "{\"name\": \"$(cat repo.txt)\"}" \
+           | grep html_url
       
-      - name: Push to Github
+      - name: Push to Github repo
         env:
           USER_NAME: ${{ secrets.USER_NAME }}
         run: |

@@ -1,0 +1,96 @@
+name: File Download
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    steps:
+      - name: Install dependent
+        run: |
+          sudo apt install zip -y
+      
+      - name: Checkout source
+        uses: actions/checkout@v2
+        with:
+          ref: main
+      
+      - name: Setup task
+        run: |
+            python3 setup.py
+
+      - name: Download video
+        run: |
+            aria2c --conf-path=./aria2.conf $(cat url.txt)
+      
+      - name: Process video
+        run: |
+          zip -m -s 10m -r file.zip $(cat file_path.txt)
+          ls file.z* > file_list.txt
+
+      - name: Setup Git
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          USER_EMAIL: ${{ secrets.USER_EMAIL }}
+          USER_NAME: ${{ secrets.USER_NAME }}
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 700 ~/.ssh
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          git config --global user.email "$USER_EMAIL"
+          git config --global user.name "$USER_NAME"
+      
+      - name: Create Github repo
+        env:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        run: |
+          curl \
+          -X POST \
+          -H "Authorization: token $ACCESS_TOKEN" \
+          -H "Content-Type: application/json" \
+          https://api.github.com/user/repos \
+          -d "{\"name\": \"$(cat repo.txt)\"}"
+      
+      - name: Push to Github
+        env:
+          USER_NAME: ${{ secrets.USER_NAME }}
+        run: |
+          mkdir -p tmp/resource/
+          mv file_list.txt tmp/
+          mv file.z* tmp/resource/
+          cd tmp
+          git init
+          git add file_list.txt resource/file.z??
+          git commit -m "add file_list and zip-z99"
+          git branch -M main
+          git remote add origin git@github.com:$USER_NAME/$(cat ../repo.txt).git
+          git push -u origin main
+          for i in {1..9};do
+            files=(resource/file.z$i??)
+              if [ -f ${files[0]} ];then
+                git add "${files[@]}"
+                git commit -m "$i th commit"
+                git push -u origin main
+              else
+                exit 0
+              fi
+          done
+          for j in {1..9};do
+            for k in {0..9};do
+              files=(resource/file.z$j$k??)
+              if [ -f ${files[0]} ];then
+                git add "${files[@]}"
+                git commit -m "$j$k th commit"
+                git push -u origin main
+              else
+                exit 0
+              fi
+            done
+          done

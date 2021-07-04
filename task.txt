@@ -1,3 +1,3 @@
-https://drive.cnci.xyz/%E8%BD%AF%E4%BB%B6/VMware-workstation-full-15.0.2-10952284.exe
-*.exe
-VMware-workstation-full-15
+http://download.microsoft.com/download/C/D/7/CD789C98-6C1A-43D6-87E9-F7FDE3806950/ThinPC_110415_EVAL_x86fre.iso
+ThinPC_110415_EVAL_x86fre.iso
+ThinPC_110415_EVAL_x86fre
